@@ -24,5 +24,12 @@
   <exec_depend>tf</exec_depend>
   <exec_depend>python-numpy</exec_depend>
   <exec_depend>python-enum34</exec_depend>
+
+  <!-- Agregar cv_bridge como dependencia -->
+  <exec_depend>cv_bridge</exec_depend>
+
+  <!-- Opcionalmente, agregar dependencia de Python para OpenCV, si es manejada a través de ROS -->
+  <exec_depend>python-opencv</exec_depend> <!-- Cambiar por el nombre correcto si es diferente -->
+
 </package>
 
