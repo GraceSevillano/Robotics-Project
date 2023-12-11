@@ -79,9 +79,10 @@ To demonstrate effective collaboration between ground robots using only visual p
      ```sh
      roslaunch turtlebot3_autorace_driving turtlebot3_autorace_control_lane.launch
      ```
+![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/ezgif.com-video-to-gif(1).gif)
 
 ## Videos
-![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/WhatsApp%20Video%202023-12-11%20at%2007.56.38.mp4)
+![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/ezgif.com-video-to-gif(2).gif)
 
 ## Contributors
 
