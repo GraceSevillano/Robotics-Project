@@ -28,6 +28,9 @@ To enable a ground robot to navigate autonomously through a predefined path by l
 
 In the second part of the project, the robot performs collaborative tasks using tag recognition and Visual Simultaneous Localization and Mapping (VSLAM).
 
+
+
+
 ### Objective
 To demonstrate effective collaboration between ground robots using only visual perception for navigation and task execution.
 
@@ -44,7 +47,7 @@ To demonstrate effective collaboration between ground robots using only visual p
    ```sh
    ssh niryo@192.168.0.150
    ```
-
+![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/WhatsApp%20Image%202023-12-11%20at%2006.46.58(1).jpeg)
 3. **Remote PC Setup:**
    - Start ROS core:
      ```sh
@@ -62,6 +65,9 @@ To demonstrate effective collaboration between ground robots using only visual p
    - Run custom Python scripts:
      ```sh
      rosrun turtlebot3_autorace_driving detect_aruco.py
+
+![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/WhatsApp%20Image%202023-12-11%20at%2006.46.58.jpeg)
+     
      rosrun turtlebot3_autorace_driving Niryo.py
      ```
    - Begin autonomous driving control:
