@@ -322,81 +322,73 @@ class DetectLane():
             
         return lane_fitx, lane_fit
 
-    def sliding_windown(self, img_w, left_or_right):
-        histogram = np.sum(img_w[int(img_w.shape[0] / 2):, :], axis=0)
+    def sliding_window(self, img_w, left_or_right):
+        # Definir la nueva altura del ROI (la mitad de la altura de la imagen)
+        roi_height = img_w.shape[0] // 2
+        img_roi = img_w[-roi_height:, :]
 
-        # Create an output image to draw on and visualize the result
-        out_img = np.dstack((img_w, img_w, img_w)) * 255
+        # Calcular el histograma de la parte inferior de la imagen
+        histogram = np.sum(img_roi, axis=0)
 
-        # Find the peak of the left and right halves of the histogram
-        # These will be the starting point for the left and right lines
+        # Crear una imagen para visualizar el resultado
+        out_img = np.dstack((img_roi, img_roi, img_roi)) * 255
+
+        # Encontrar el pico del histograma para la línea izquierda o derecha
         midpoint = np.int(histogram.shape[0] / 2)
-
         if left_or_right == 'left':
             lane_base = np.argmax(histogram[:midpoint])
         elif left_or_right == 'right':
             lane_base = np.argmax(histogram[midpoint:]) + midpoint
 
-        # Choose the number of sliding windows
+        # Configurar el número de ventanas deslizantes y su altura
         nwindows = 20
+        window_height = np.int(roi_height / nwindows)
 
-        # Set height of windows
-        window_height = np.int(img_w.shape[0] / nwindows)
-
-        # Identify the x and y positions of all nonzero pixels in the image
-        nonzero = img_w.nonzero()
+        # Identificar las posiciones x e y de todos los píxeles no nulos en la imagen
+        nonzero = img_roi.nonzero()
         nonzeroy = np.array(nonzero[0])
         nonzerox = np.array(nonzero[1])
 
-        # Current positions to be updated for each window
+        # Posición actual para actualizar cada ventana
         x_current = lane_base
 
-        # Set the width of the windows +/- margin
+        # Ancho de las ventanas +/- margen
         margin = 50
-
-        # Set minimum number of pixels found to recenter window
         minpix = 50
 
-        # Create empty lists to receive lane pixel indices
+        # Lista para recibir los índices de píxeles de la línea
         lane_inds = []
 
-        # Step through the windows one by one
+        # Recorrer las ventanas una por una
         for window in range(nwindows):
-            # Identify window boundaries in x and y
-            win_y_low = img_w.shape[0] - (window + 1) * window_height
-            win_y_high = img_w.shape[0] - window * window_height
+            # Definir los límites de la ventana en x e y
+            win_y_low = roi_height - (window + 1) * window_height
+            win_y_high = roi_height - window * window_height
             win_x_low = x_current - margin
             win_x_high = x_current + margin
 
-            # Draw the windows on the visualization image
-            cv2.rectangle(out_img, (win_x_low, win_y_low), (win_x_high, win_y_high), (0, 255, 0), 2)
+            # Identificar los píxeles no nulos dentro de la ventana
+            good_lane_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) &
+                              (nonzerox >= win_x_low) & (nonzerox < win_x_high)).nonzero()[0]
 
-            # Identify the nonzero pixels in x and y within the window
-            good_lane_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_x_low) & (
-                nonzerox < win_x_high)).nonzero()[0]
-
-            # Append these indices to the lists
+            # Agregar estos índices a la lista
             lane_inds.append(good_lane_inds)
 
-            # If you found > minpix pixels, recenter next window on their mean position
+            # Si se encontraron suficientes píxeles, reubicar la ventana siguiente
             if len(good_lane_inds) > minpix:
                 x_current = np.int(np.mean(nonzerox[good_lane_inds]))
 
-        # Concatenate the arrays of indices
+        # Concatenar los índices de las ventanas
         lane_inds = np.concatenate(lane_inds)
 
-        # Extract line pixel positions
+        # Extraer las posiciones de los píxeles de la línea
         x = nonzerox[lane_inds]
-        y = nonzeroy[lane_inds]
+        y = nonzeroy[lane_inds] + (img_w.shape[0] - roi_height) # Ajustar y para la posición original
 
-        # Fit a second order polynomial to each
-        try:
-            lane_fit = np.polyfit(y, x, 2)
-            self.lane_fit_bef = lane_fit
-        except:
-            lane_fit = self.lane_fit_bef
+        # Ajustar un polinomio de segundo orden
+        lane_fit = np.polyfit(y, x, 2)
 
-        # Generate x and y values for plotting
+        # Generar valores x e y para el trazado
         ploty = np.linspace(0, img_w.shape[0] - 1, img_w.shape[0])
         lane_fitx = lane_fit[0] * ploty ** 2 + lane_fit[1] * ploty + lane_fit[2]
 
