@@ -34,27 +34,34 @@ class ControlLane():
         self.MAX_VEL = max_vel_msg.data
 
     def arucoCallBack(self, msg):
-        distancia = msg.data
-        if 0.13 < distancia < 0.15:
+        distancia_ = msg.data
+        if 0.18 < distancia_ < 0.19:
             self.stopped = True
             self.niryoespera = True
-
+            
     def communicate_with_niryo(self, msg):
         if msg.data == 2:
             self.stopped = False
             self.niryoespera = False
 
     def cbFollowLane(self, desired_center):
+
         if not self.stopped and not self.niryoespera:
             print("Continua moviendose")
             center = desired_center.data
+
             error = center - 500
+
             Kp = 0.0025
             Kd = 0.007
+
             angular_z = Kp * error + Kd * (error - self.lastError)
             self.lastError = error
+
             twist = Twist()
+            # twist.linear.x = 0.05        
             twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), 0.05)
+
             twist.linear.y = 0
             twist.linear.z = 0
             twist.angular.x = 0
@@ -63,8 +70,8 @@ class ControlLane():
             self.pub_cmd_vel.publish(twist)
 
         elif self.niryoespera:
-            # Aquí puedes mantener el Turtlebot en espera o realizar alguna otra acción
-            print("Esperando a Niryo")
+            print("Niryo manda la senal chico")
+            self.pub_niryo.publish(1)
 
         else:
             print("FINITO")
@@ -72,6 +79,8 @@ class ControlLane():
 
     def fnShutDown(self):
         rospy.loginfo("Shutting down. cmd_vel sera 0")
+        #self.pub_cmd_vel.publish(Twist())
+
         twist = Twist()
         twist.linear.x = 0
         twist.linear.y = 0
@@ -79,10 +88,11 @@ class ControlLane():
         twist.angular.x = 0
         twist.angular.y = 0
         twist.angular.z = 0
-        self.pub_cmd_vel.publish(twist)
+        self.pub_cmd_vel.publish(twist) 
 
     def main(self):
         rospy.spin()
+
 
 if __name__ == '__main__':
     rospy.init_node('control_lane')
