@@ -52,12 +52,10 @@ class ArucoDetector:
                     print(f"detected marker {ids[i]} at distance {distancia} meters")
                     #self.aruco_detected_publisher.publish("DETECTED")
                     self.aruco_detected_distance.publish(Float64(distancia))
-                    
-                image_message = self.bridge.cv2_to_imgmsg(cv_image, "bgr8")
-                self.image_publisher.publish(image_message)
-                rospy.loginfo("Image published")
-            else:
-                rospy.loginfo("No ArUco Markers Detected")
+            
+            image_message = self.bridge.cv2_to_imgmsg(cv_image, "bgr8")
+            self.image_publisher.publish(image_message)
+            rospy.loginfo("Image published")
 
         except CvBridgeError as e:
             rospy.logerr("CvBridge Error: {}".format(e))
