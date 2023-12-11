@@ -67,6 +67,9 @@ To demonstrate effective collaboration between ground robots using only visual p
      rosrun turtlebot3_autorace_driving detect_aruco.py
 
 ![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/WhatsApp%20Image%202023-12-11%20at%2006.46.58.jpeg)
+
+
+![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/ezgif.com-optimize(3).gif)
      
      rosrun turtlebot3_autorace_driving Niryo.py
      ```
@@ -76,7 +79,7 @@ To demonstrate effective collaboration between ground robots using only visual p
      ```
 
 ## Videos
-
+![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/WhatsApp%20Video%202023-12-11%20at%2007.56.38.mp4)
 
 ## Contributors
 
