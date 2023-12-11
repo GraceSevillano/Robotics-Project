@@ -74,5 +74,4 @@ To demonstrate effective collaboration between ground robots using only visual p
 
 ## Contributors
 
-- [Your Name](Your Profile Link)
-
+- Grace Sevillano
