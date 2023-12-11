@@ -1,94 +1,97 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import rospy
 import numpy as np
-import cv2
-import cv2.aruco as aruco
-from sensor_msgs.msg import Image
-from std_msgs.msg import Float64, UInt8
+from std_msgs.msg import Float64, UInt8, String
 from geometry_msgs.msg import Twist
-from cv_bridge import CvBridge
+#from sensor_msgs.msg import Image
+#from cv_bridge import CvBridge, CvBridgeError
+
+from pyniryo import *
+import sys
 
 class ControlLane():
     def __init__(self):
         self.sub_lane = rospy.Subscriber('/control/lane', Float64, self.cbFollowLane, queue_size=1)
         self.sub_max_vel = rospy.Subscriber('/control/max_vel', Float64, self.cbGetMaxVel, queue_size=1)
         self.pub_cmd_vel = rospy.Publisher('/control/cmd_vel', Twist, queue_size=1)
-        self.pub_niryo = rospy.Publisher('/niryo_con', UInt8, queue_size=1)
+        
+        self.pub_niryo = rospy.Publisher('/niryo_con', UInt8, queue_size=10)
+        self.sub_niryo = rospy.Subscriber('/niryo_con', UInt8, self.communicate_with_niryo, queue_size = 1)
 
-        self.sub_camera = rospy.Subscriber('/camera/rgb/image_raw', Image, self.camera_callback, queue_size=1)
-        self.pub_processed_image = rospy.Publisher('/camera/processed_image', Image, queue_size=1)        
-        self.bridge = CvBridge()
+        self.aruco_detected_distance = rospy.Subscriber('/aruco_distance', Float64, self.arucoCallBack, queue_size = 1)
+        #self.sub_aruco_detected = rospy.Subscriber('/aruco/detected', String, self.aruco_detected_callback)
 
         self.lastError = 0
+        self.stopped = False
         self.MAX_VEL = 0.1
-        self.aruco_detected = False
+        self.niryoespera= True
 
         rospy.on_shutdown(self.fnShutDown)
 
-    def camera_callback(self, data):
-        try:
-            frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
-        except CvBridgeError as e:
-            print(e)
-
-        self.detect_aruco(frame)
-
-    def detect_aruco(self, frame):
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        parameters = aruco.DetectorParameters_create()
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
-
-        if ids is not None:
-            self.aruco_detected = True
-            aruco.drawDetectedMarkers(frame, corners, ids)
-        else:
-            self.aruco_detected = False
-        
-        try:
-            self.pub_processed_image.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
-        except CvBridgeError as e:
-            print(e)
-
-    def cbGetMaxVel(self, max_vel_msg):
+    def cbGetMaxVel(self, max_vel_msg ):
         self.MAX_VEL = max_vel_msg.data
 
-    def cbFollowLane(self, desired_center):
-        if self.aruco_detected:
-            self.pub_cmd_vel.publish(Twist())  # Stop the robot
-            self.communicate_with_niryo()
-            self.aruco_detected = False
-            return
+    def arucoCallBack(self, msg):
+        distancia = msg.data
+        if 0.41 < distancia < 0.45:
+            self.stopped = True
 
-        center = desired_center.data
-        error = center - 500
-        Kp = 0.0025
-        Kd = 0.007
-        angular_z = Kp * error + Kd * (error - self.lastError)
-        self.lastError = error
-        
+    def communicate_with_niryo(self, msg):
+        if msg.data == 2:
+            self.stopped = False
+            self.niryoespera = False
+
+    def cbFollowLane(self, desired_center):
+
+        if not self.stopped:
+            print("Continua moviendose")
+            center = desired_center.data
+
+            error = center - 500
+
+            Kp = 0.0025
+            Kd = 0.007
+
+            angular_z = Kp * error + Kd * (error - self.lastError)
+            self.lastError = error
+
+            twist = Twist()
+            # twist.linear.x = 0.05        
+            twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), 0.05)
+
+            twist.linear.y = 0
+            twist.linear.z = 0
+            twist.angular.x = 0
+            twist.angular.y = 0
+            twist.angular.z = -max(angular_z, -2.0) if angular_z < 0 else -min(angular_z, 2.0)
+            self.pub_cmd_vel.publish(twist)
+
+        elif self.niryoespera:
+            print("Niryo manda la senal chico")
+            self.pub_niryo.publish(1)
+
+        else:
+            print("FINITO")
+            self.stopped = True
+
+    def fnShutDown(self):
+        rospy.loginfo("Shutting down. cmd_vel sera 0")
+        #self.pub_cmd_vel.publish(Twist())
+
         twist = Twist()
-        twist.linear.x = min(self.MAX_VEL * ((1 - abs(error) / 500) ** 2.2), 0.05)
+        twist.linear.x = 0
         twist.linear.y = 0
         twist.linear.z = 0
         twist.angular.x = 0
         twist.angular.y = 0
-        twist.angular.z = -max(angular_z, -2.0) if angular_z < 0 else -min(angular_z, 2.0)
-        self.pub_cmd_vel.publish(twist)
+        twist.angular.z = 0
+        self.pub_cmd_vel.publish(twist) 
 
-    def communicate_with_niryo(self):
-        niryo_msg = UInt8()
-        niryo_msg.data = 1
-        self.pub_niryo.publish(niryo_msg)
-
-    def fnShutDown(self):
-        rospy.loginfo("Shutting down. cmd_vel will be 0")
-        self.pub_cmd_vel.publish(Twist())
-
-    def main(self):
+    def main(*args):
         rospy.spin()
+
 
 if __name__ == '__main__':
     rospy.init_node('control_lane')
