@@ -58,6 +58,8 @@ To demonstrate effective collaboration between ground robots using only visual p
      roslaunch turtlebot3_autorace_camera intrinsic_camera_calibration.launch mode:=action
      roslaunch turtlebot3_autorace_camera extrinsic_camera_calibration.launch mode:=action
      ```
+![alt text](https://github.com/GraceSevillano/Robotics-Project/blob/main/SUPPORT%20IMAGES/ezgif.com-video-to-gif.gif)
+
    - Start lane detection:
      ```sh
      roslaunch turtlebot3_autorace_detect detect_lane.launch mode:=action
